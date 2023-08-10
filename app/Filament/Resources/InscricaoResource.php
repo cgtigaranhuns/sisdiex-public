@@ -111,7 +111,7 @@ class InscricaoResource extends Resource
                                                     ->title('ATENÇÃO')
                                                     ->warning()
                                                     ->color('danger')
-                                                    ->body('Para confirmar sua inscrição, entregue a doação ' . $acao->tipo_doacao . ' na Diex')
+                                                    ->body('Para confirmar sua inscrição, entregue a doação ' . $acao->tipo_doacao . ' na DIEX')
                                                     ->persistent()
                                                     ->send();
                                             }

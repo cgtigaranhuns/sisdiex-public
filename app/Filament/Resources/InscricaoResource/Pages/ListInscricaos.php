@@ -12,12 +12,13 @@ class ListInscricaos extends ListRecords
 {
     protected static string $resource = InscricaoResource::class;
 
-    protected static ?string $title = 'Incrições';
+    protected static ?string $title = 'Suas Inscrições';
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Nova Inscrição'),
         ];
     }
 
