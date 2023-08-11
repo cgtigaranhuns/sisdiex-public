@@ -151,7 +151,7 @@ class InscricaoResource extends Resource
                                                 ->send();
                                         })
                                         ->live()
-                                ]),
+                                    ]),
                             Wizard\Step::make('Dados Básicos')
                                 ->schema([
                                     Grid::make()
