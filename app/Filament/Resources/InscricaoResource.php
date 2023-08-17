@@ -51,10 +51,6 @@ class InscricaoResource extends Resource
     protected static ?string $modelLabel = 'Inscrição';
 
 
-
-
-
-
     public function alertaAction(): Action
     {
 
@@ -64,10 +60,6 @@ class InscricaoResource extends Resource
             ->modalDescription('Inscrições Encerradas.')
             ->modalSubmitActionLabel('Entendi');
     }
-
-
-
-
 
 
     public static function form(Form $form): Form
@@ -94,7 +86,7 @@ class InscricaoResource extends Resource
                                                      return false;
                                              }
                                             }
-                                         })
+                                         }) 
                                         ->reactive()
                                         ->live()
                                         ->options(Acao::all()
@@ -185,7 +177,9 @@ class InscricaoResource extends Resource
                                                     }
                                                  })
                                                 ->searchable()
-                                                ->options(Discente::all()->pluck('username', 'id')->toArray())
+                                                ->getSearchResultsUsing(fn (string $search): array => Discente::where('username', 'like', "%{$search}%")->limit(50)->pluck('name', 'id')->toArray())
+                                                ->getOptionLabelUsing(fn ($value): ?string => Discente::find($value)?->name)
+                                              //  ->options(Discente::all()->pluck('username', 'id')->toArray())
                                                 ->hidden(fn (Get $get) => $get('inscricao_tipo') == '2'  ||  $get('inscricao_tipo') == '3' ?? true),
                                             Forms\Components\TextInput::make('nome')
                                                 ->label('Nome')
