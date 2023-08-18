@@ -12,7 +12,15 @@ class CreateInscricao extends CreateRecord
 {
     protected static string $resource = InscricaoResource::class;
 
-    
+    protected function getActions(): array
+    {
+        return [
+            Actions\CreateAction::make()
+            ->after(function($record) {
+                dd($record);
+            }),
+        ];
+    }
       
     
     protected function getRedirectUrl(): string

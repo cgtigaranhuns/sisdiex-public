@@ -15,13 +15,14 @@ class InscricaotPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('View Inscricao');
+      //  return $user->hasPermissionTo('View Inscricao');
+      return true;
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Inscricao $inscricao): bool
+    public function view(User $user, Inscricao $inscricao)
     {
         //
     }
@@ -31,7 +32,8 @@ class InscricaotPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('Create Inscricao');
+        //return $user->hasPermissionTo('Create Inscricao');
+        return true;
     }
 
     /**
@@ -39,7 +41,8 @@ class InscricaotPolicy
      */
     public function update(User $user, Inscricao $inscricao): bool
     {
-        return $user->hasPermissionTo('Edit Inscricao');
+       // return $user->hasPermissionTo('Edit Inscricao');
+       return true;
     }
 
     /**
@@ -47,13 +50,14 @@ class InscricaotPolicy
      */
     public function delete(User $user, Inscricao $inscricao): bool
     {
-        return $user->hasPermissionTo('Delete Inscricao');
+       // return $user->hasPermissionTo('Delete Inscricao');
+       return true;
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Inscricao $inscricao): bool
+    public function restore(User $user, Inscricao $inscricao)
     {
         //
     }
@@ -61,7 +65,7 @@ class InscricaotPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Inscricao $inscricao): bool
+    public function forceDelete(User $user, Inscricao $inscricao)
     {
         //
     }

@@ -28,7 +28,7 @@
     </style>
 </head>
 <body>
-    <table style="width: 100%">
+    <table>
         <tr>
           <td><img src="{{ asset('img/logo-ifpe.png') }}" alt="Logo" width="150" height="200"></td>
           <td> <p style="width: 100%; font-size:24px; font-family: 'courier,arial,helvetica font-weight: bold;" align="center">Divisão de Extensão do IFPE - Campus Garanhuns</p>
@@ -37,6 +37,12 @@
       </table>
       <table class="tabela">
         <tr>
+            <td>
+                <label class="alinhamento">Número da Inscrição:</label> 
+                {{$inscricao->id}}
+            </td>
+        </tr>
+        <tr>    
             <td>
                 <label class="alinhamento">Evento/Ação:</label> 
                 {{$inscricao->acao->titulo}}

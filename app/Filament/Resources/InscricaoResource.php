@@ -24,11 +24,16 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 use Filament\Notifications\Notification;
 //use Filament\Pages\Actions\Action;
 use Filament\Notifications\Actions\Action;
+use Illuminate\Support\Facades\DB;
+use App\Mail\NovaInscricao;
+use Illuminate\Support\Facades\Mail;
+use Filament\Actions\CreateAction;
 
 
 
@@ -78,49 +83,63 @@ class InscricaoResource extends Resource
                                         ->label('Ação/Evento')
                                         ->required(false)
                                         ->searchable()
-                                        ->disabled( function($context, $record) {
-                                            if($context == 'edit') {
-                                                 if($record->inscricao_status != '1') {
-                                                     return true;
-                                                 }else {
-                                                     return false;
-                                             }
+                                        ->disabled(function ($context, $record) {
+                                            if ($context == 'edit') {
+                                                if ($record->inscricao_status != '1') {
+                                                    return true;
+                                                } else {
+                                                    return false;
+                                                }
                                             }
-                                         }) 
+                                        })
                                         ->reactive()
                                         ->live()
-                                        ->options(Acao::all()
+                                        ->options(Acao::query()
                                             ->where('status', '=', '2')
-                                            ->where('data_inicio_inscricoes', '<=', Carbon::today())
-                                            ->where('data_fim_inscricoes', '>=', Carbon::today())
+                                            ->whereDate('data_inicio_inscricoes', '<=', Carbon::now()->format('Y-m-d'))
+                                            ->whereDate('data_fim_inscricoes', '>=', Carbon::now()->format('Y-m-d'))
                                             ->pluck('titulo', 'id')
                                             ->toArray())
                                         ->afterStateUpdated(function (Get $get) {
+                                            //CONTAR INSCRIÇÕES
                                             $acao = Acao::find($get('acao_id'));
-                                            if ($acao->doacao == '1') {
+                                            $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->count();
 
+                                            if ($contInscAcao >= $acao->vagas_total) {
                                                 Notification::make()
                                                     ->title('ATENÇÃO')
                                                     ->warning()
                                                     ->color('danger')
-                                                    ->body('Para confirmar sua inscrição, entregue a doação ' . $acao->tipo_doacao . ' na DIEX')
+                                                    ->body('vagas encerra!')
                                                     ->persistent()
                                                     ->send();
+                                            } else {
+                                                //INFORMAR EXIGÊNCIA DE DOAÇÕES
+                                                if ($acao->doacao == '1') {
+
+                                                    Notification::make()
+                                                        ->title('ATENÇÃO')
+                                                        ->warning()
+                                                        ->color('danger')
+                                                        ->body('Para confirmar sua inscrição, entregue a doação: ' . $acao->tipo_doacao . ' na DIEX')
+                                                        ->persistent()
+                                                        ->send();
+                                                }
                                             }
                                         }),
 
                                     Select::make('inscricao_tipo')
                                         ->label('Tipo de Inscrição')
                                         ->required(false)
-                                        ->disabled( function($context, $record) {
-                                            if($context == 'edit') {
-                                                 if($record->inscricao_status != '1') {
-                                                     return true;
-                                                 }else {
-                                                     return false;
-                                             }
+                                        ->disabled(function ($context, $record) {
+                                            if ($context == 'edit') {
+                                                if ($record->inscricao_status != '1') {
+                                                    return true;
+                                                } else {
+                                                    return false;
+                                                }
                                             }
-                                         })
+                                        })
                                         ->reactive()
                                         ->options([
                                             '1' => 'Discente - IFPE - Campus Garanhuns',
@@ -128,22 +147,50 @@ class InscricaoResource extends Resource
                                             '3' => 'Externo - IFPE - Campus Garanhuns',
                                         ])
 
-                                        ->afterStateUpdated(function () {
-                                            Notification::make()
-                                                ->title('ATENÇÃO')
-                                                ->danger()
-                                                ->color('danger')
-                                                ->body('Para os discentes do Campus as vagas foram encerradas.')
-                                                ->persistent()
-                                                ->actions([
-                                                    Action::make('Entendi')
-                                                        ->url(route('filament.admin.resources.inscricaos.create'), shouldOpenInNewTab: false)
-                                                        ->button(),
-                                                ])
-                                                ->send();
+                                        ->afterStateUpdated(function (Get $get) {
+                                            //CONTAR INSCRIÇÕES
+                                            $acao = Acao::find($get('acao_id'));
+                                            $contInsTipo = Inscricao::where('acao_id', $get('acao_id'))->where('inscricao_tipo', $get('inscricao_tipo'))->count();
+                                                                                                                    
+                                            if ($acao->cota == 1) {
+                                                if ($get('inscricao_tipo') == 1) {
+                                                    if ($contInsTipo >= ($acao->cota_discente))
+                                                        Notification::make()
+                                                            ->title('ATENÇÃO')
+                                                            ->warning()
+                                                            ->color('danger')
+                                                            ->body('Vagas encerra para a cota discente!')
+                                                            ->persistent()
+                                                            ->send();
+                                                }
+
+                                                if ($get('inscricao_tipo') == 2) {
+                                                    if ($contInsTipo >= $acao->cota_servidor) {
+                                                        Notification::make()
+                                                            ->title('ATENÇÃO')
+                                                            ->warning()
+                                                            ->color('danger')
+                                                            ->body('Vagas encerra para a cota servidor!')
+                                                            ->persistent()
+                                                            ->send();
+                                                    }
+                                                }
+                                                if ($get('inscricao_tipo') == 3) {
+                                                    if ($contInsTipo >= $acao->cota_externo) {
+                                                        Notification::make()
+                                                            ->title('ATENÇÃO')
+                                                            ->warning()
+                                                            ->color('danger')
+                                                            ->body('Vagas encerra para a cota externa!')
+                                                            ->persistent()
+                                                            ->send();
+                                                    }
+                                                }
+                                            }
                                         })
+
                                         ->live()
-                                    ]),
+                                ]),
                             Wizard\Step::make('Dados Básicos')
                                 ->schema([
                                     Grid::make()
@@ -151,15 +198,15 @@ class InscricaoResource extends Resource
                                             Forms\Components\Select::make('user_id')
                                                 ->label('Servidor - IFPE - Campus Garanhuns')
                                                 ->required(false)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->searchable()
                                                 ->options(User::all()->pluck('name', 'id')->toArray())
                                                 ->hidden(fn (Get $get) => $get('inscricao_tipo') == '1'  ||  $get('inscricao_tipo') == '3' ?? true),
@@ -167,71 +214,72 @@ class InscricaoResource extends Resource
                                             Forms\Components\Select::make('discente_id')
                                                 ->label('Discente - IFPE - Campus Garanhuns')
                                                 ->required(false)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->placeholder('Digite sua ')
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->searchable()
                                                 ->getSearchResultsUsing(fn (string $search): array => Discente::where('username', 'like', "%{$search}%")->limit(50)->pluck('name', 'id')->toArray())
                                                 ->getOptionLabelUsing(fn ($value): ?string => Discente::find($value)?->name)
-                                              //  ->options(Discente::all()->pluck('username', 'id')->toArray())
+                                                //  ->options(Discente::all()->pluck('username', 'id')->toArray())
                                                 ->hidden(fn (Get $get) => $get('inscricao_tipo') == '2'  ||  $get('inscricao_tipo') == '3' ?? true),
                                             Forms\Components\TextInput::make('nome')
                                                 ->label('Nome')
                                                 ->required(false)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->maxLength(255)
                                                 ->hidden(fn (Get $get) => $get('inscricao_tipo') == '1'  ||  $get('inscricao_tipo') == '2' ?? true),
                                             Forms\Components\TextInput::make('cpf')
                                                 ->mask('999.999.999-99')
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->label('CPF'),
                                             Forms\Components\TextInput::make('telefone')
                                                 ->required(false)
                                                 ->mask('(99)99999-9999')
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->tel(),
                                             Forms\Components\TextInput::make('email')
                                                 ->email()
                                                 ->required(false)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->maxLength(255),
                                         ]),
                                 ]),
@@ -242,28 +290,28 @@ class InscricaoResource extends Resource
                                             Forms\Components\TextInput::make('instituicao_origem')
                                                 ->label('Instituição de Origem')
                                                 ->required(false)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->maxLength(255),
                                             Forms\Components\Select::make('escolaridade')
                                                 ->label('Escolaridade')
                                                 ->required(false)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->searchable()
                                                 ->options([
                                                     '1' => 'Não Alfabetizado',
@@ -283,28 +331,28 @@ class InscricaoResource extends Resource
                                                 ]),
                                             Forms\Components\TextInput::make('naturalidade')
                                                 ->required(false)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->maxLength(255),
                                             Forms\Components\DatePicker::make('data_nascimento')
                                                 ->label('Data de Nascimento')
                                                 ->date()
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->reactive()
                                                 ->required(true)
                                                 ->afterStateUpdated(function ($set, $state) {
@@ -316,54 +364,54 @@ class InscricaoResource extends Resource
                                                 ->live(onBlur: true),
                                             Forms\Components\Hidden::make('idade')
                                                 ->default(18)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->live(),
                                             Forms\Components\TextInput::make('responsavel_nome')
                                                 ->label('Nome do responsável')
                                                 ->required(false)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->maxLength(255)
                                                 ->required()
                                                 ->hidden(fn (Get $get) => $get('idade') > '17' ?? true),
                                             Forms\Components\TextInput::make('responsavel_grau')
                                                 ->required(true)
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->hidden(fn (Get $get) => $get('idade') > '17' ?? true),
                                             Radio::make('cor_raca')
                                                 ->label('Cor/Raça:')
-                                                ->disabled( function($context, $record) {
-                                                    if($context == 'edit') {
-                                                         if($record->inscricao_status != '1') {
-                                                             return true;
-                                                         }else {
-                                                             return false;
-                                                     }
+                                                ->disabled(function ($context, $record) {
+                                                    if ($context == 'edit') {
+                                                        if ($record->inscricao_status != '1') {
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
                                                     }
-                                                 })
+                                                })
                                                 ->inline()
                                                 ->options([
                                                     '1' => 'Branca',
@@ -380,14 +428,15 @@ class InscricaoResource extends Resource
                                         ]),
 
                                 ]),
-                        ])->submitAction(new HtmlString(Blade::render(<<<BLADE
+                        ])
+                        /*->submitAction(new HtmlString(Blade::render(<<<BLADE
                         <x-filament::button
                             type="submit"
                             size="sm"
                         >
                             Enviar
                         </x-filament::button>
-                    BLADE)))
+                    BLADE))) */
                     ]),
 
             ])->columns('full');
@@ -460,13 +509,13 @@ class InscricaoResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                ->disabled(function ($record) {
-                   if($record->inscricao_status != '1') {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }),
+                    ->disabled(function ($record) {
+                        if ($record->inscricao_status != '1') {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }),
                 Tables\Actions\Action::make('Imprimir_inscricao')
                     ->label('Imprimir Comprovante')
                     ->url(fn (Inscricao $record): string => route('imprimirInscricao', $record))
@@ -474,7 +523,7 @@ class InscricaoResource extends Resource
                 Tables\Actions\Action::make('Imprimir_certificdao')
                     ->label('Imprimir Certificado')
                     ->disabled(function ($record) {
-                        if($record->aprovacao_status == 2) {
+                        if ($record->aprovacao_status == 2) {
                             return false;
                         } else {
                             return true;
@@ -482,12 +531,19 @@ class InscricaoResource extends Resource
                     })
                     ->url(fn (Inscricao $record): string => route('imprimirCertificadoParticipante', $record))
                     ->openUrlInNewTab(),
-                
+
             ])
             ->bulkActions([])
+            ->headerActions([
+                Tables\Actions\CreateAction::make()
+                 ->after(function ($data, $record) {
+                    Mail::to($record->email)->send(new NovaInscricao($record));
+                })
+
+            ])
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make()
-
+            
             ]);
     }
 

@@ -49,6 +49,7 @@ class UserResource extends Resource
                     ->dehydrated(fn ($state) => filled($state))
                    ->required(fn (string $context): bool => $context === 'create'),
                 Forms\Components\Select::make('roles')
+                        ->disabled()
                         ->preload()
                         ->relationship('roles', 'name'),
                               
