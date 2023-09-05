@@ -3,10 +3,12 @@
 namespace App\Filament\Resources\InscricaoResource\Pages;
 
 use App\Filament\Resources\InscricaoResource;
+use App\Mail\NovaInscricao;
 use App\Models\Inscricao;
 use Filament\Actions;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Mail;
 
 class CreateInscricao extends CreateRecord
 {
@@ -16,9 +18,9 @@ class CreateInscricao extends CreateRecord
     {
         return [
             Actions\CreateAction::make()
-            ->after(function($record) {
-                dd($record);
-            }),
+           
+
+            
         ];
     }
       

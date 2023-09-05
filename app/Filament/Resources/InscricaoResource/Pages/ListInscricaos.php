@@ -18,7 +18,8 @@ class ListInscricaos extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Nova Inscrição'),
+                ->label('Nova Inscrição')
+                
         ];
     }
 

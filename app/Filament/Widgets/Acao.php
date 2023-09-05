@@ -53,7 +53,11 @@ class Acao extends BaseWidget
                 TextColumn::make('hora_encerramento')
                     ->label('Hora Encerramento')
                     ->date('H:i'), 
+                TextColumn::make('requisitos')
+                    ->alignCenter()
+                    ->label('Requisitos'),
                 TextColumn::make('tipo_doacao')
+                    ->alignCenter()
                     ->label('Doação'),
                                       
                 
