@@ -300,16 +300,9 @@ class InscricaoResource extends Resource
                                                 ->tel(),
                                             Forms\Components\TextInput::make('email')
                                                 ->email()
+                                                ->default(auth()->user()->email)
                                                 ->required(false)
-                                                ->disabled(function ($context, $record) {
-                                                    if ($context == 'edit') {
-                                                        if ($record->inscricao_status != '1') {
-                                                            return true;
-                                                        } else {
-                                                            return false;
-                                                        }
-                                                    }
-                                                })
+                                                ->disabled()
                                                 ->maxLength(255),
                                         ]),
                                 ]),
