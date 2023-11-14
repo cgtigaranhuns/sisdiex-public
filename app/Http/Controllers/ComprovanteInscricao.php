@@ -44,13 +44,13 @@ class ComprovanteInscricao extends Controller
         //Status da Ação
         
         if($inscricao->acao->status == 1) {
-            $nomeStatus = 'Em Análise';
+            $nomeStatus = 'Inscrição em Análise';
         }
         elseif($inscricao->acao->status == 2) {
-            $nomeStatus = 'Aprovada';
+            $nomeStatus = 'Inscrição Aprovada';
         }
         else {
-            $nomeStatus = 'Reprovada';
+            $nomeStatus = 'Inscrição Reprovada';
         }
                 
             

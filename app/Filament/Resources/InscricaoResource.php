@@ -71,7 +71,7 @@ class InscricaoResource extends Resource
 
                                     Forms\Components\Select::make('acao_id')
                                         ->label('Ação/Evento')
-                                        ->required(false)
+                                        ->required(true)
                                         ->searchable()
                                         ->disabled(function ($context, $record) {
                                             if ($context == 'edit') {
@@ -130,7 +130,7 @@ class InscricaoResource extends Resource
 
                                     Select::make('inscricao_tipo')
                                         ->label('Tipo de Inscrição')
-                                        ->required(false)
+                                        ->required(true)
                                         ->disabled(function ($context, $record) {
                                             if ($context == 'edit') {
                                                 if ($record->inscricao_status != '1') {
@@ -224,7 +224,7 @@ class InscricaoResource extends Resource
                                         ->schema([
                                             Forms\Components\Select::make('user_id')
                                                 ->label('Servidor - IFPE - Campus Garanhuns')
-                                                ->required(false)
+                                                ->required(true)
                                                 ->placeholder('Digite seu SIAPE')
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
@@ -243,7 +243,7 @@ class InscricaoResource extends Resource
 
                                             Forms\Components\Select::make('discente_id')
                                                 ->label('Discente - IFPE - Campus Garanhuns')
-                                                ->required(false)
+                                                ->required(true)
                                                 ->placeholder('Digite sua matrícula ')
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
@@ -261,7 +261,7 @@ class InscricaoResource extends Resource
                                                 ->hidden(fn (Get $get) => $get('inscricao_tipo') == '2'  ||  $get('inscricao_tipo') == '3' ?? true),
                                             Forms\Components\TextInput::make('nome')
                                                 ->label('Nome')
-                                                ->required(false)
+                                                ->required(true)
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
                                                         if ($record->inscricao_status != '1') {
@@ -286,7 +286,7 @@ class InscricaoResource extends Resource
                                                 })
                                                 ->label('CPF'),
                                             Forms\Components\TextInput::make('telefone')
-                                                ->required(false)
+                                                ->required(true)
                                                 ->mask('(99)99999-9999')
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
@@ -301,8 +301,8 @@ class InscricaoResource extends Resource
                                             Forms\Components\TextInput::make('email')
                                                 ->email()
                                                 ->default(auth()->user()->email)
-                                                ->required(false)
-                                                ->disabled()
+                                                ->required(true)
+                                                ->readOnly()
                                                 ->maxLength(255),
                                         ]),
                                 ]),
@@ -312,7 +312,7 @@ class InscricaoResource extends Resource
                                         ->schema([
                                             Forms\Components\TextInput::make('instituicao_origem')
                                                 ->label('Instituição de Origem')
-                                                ->required(false)
+                                                ->required(true)
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
                                                         if ($record->inscricao_status != '1') {
@@ -325,7 +325,7 @@ class InscricaoResource extends Resource
                                                 ->maxLength(255),
                                             Forms\Components\Select::make('escolaridade')
                                                 ->label('Escolaridade')
-                                                ->required(false)
+                                                ->required(true)
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
                                                         if ($record->inscricao_status != '1') {
@@ -353,7 +353,7 @@ class InscricaoResource extends Resource
 
                                                 ]),
                                             Forms\Components\TextInput::make('naturalidade')
-                                                ->required(false)
+                                                ->required(true)
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
                                                         if ($record->inscricao_status != '1') {
@@ -399,7 +399,7 @@ class InscricaoResource extends Resource
                                                 ->live(),
                                             Forms\Components\TextInput::make('responsavel_nome')
                                                 ->label('Nome do responsável')
-                                                ->required(false)
+                                                ->required(true)
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
                                                         if ($record->inscricao_status != '1') {
@@ -499,7 +499,7 @@ class InscricaoResource extends Resource
                         '2' => 'success',
                         '3' => 'danger',
                     }),
-                Tables\Columns\SelectColumn::make('inscricao_tipo')
+             /*   Tables\Columns\SelectColumn::make('inscricao_tipo')
                     ->label('Tipo de Inscrição')
                     ->disabled()
                     ->options([
@@ -517,7 +517,7 @@ class InscricaoResource extends Resource
                 Tables\Columns\TextColumn::make('email'),
                 Tables\Columns\TextColumn::make('data_nascimento')
                     ->label('Data de Nascimento')
-                    ->date(),
+                    ->date(), */
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -538,7 +538,7 @@ class InscricaoResource extends Resource
                         } else {
                             return false;
                         }
-                    }),
+                    }), 
                 Tables\Actions\Action::make('Imprimir_inscricao')
                     ->label('Imprimir Comprovante')
                     ->url(fn (Inscricao $record): string => route('imprimirInscricao', $record))

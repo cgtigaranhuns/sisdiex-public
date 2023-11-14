@@ -14,10 +14,13 @@ class CreateInscricao extends CreateRecord
 {
     protected static string $resource = InscricaoResource::class;
 
+    protected static bool $canCreateAnother = false;
+
     protected function getActions(): array
     {
         return [
             Actions\CreateAction::make()
+               
            
 
             
