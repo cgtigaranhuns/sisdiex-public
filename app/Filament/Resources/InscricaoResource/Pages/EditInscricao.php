@@ -16,4 +16,7 @@ class EditInscricao extends EditRecord
            // Actions\DeleteAction::make(),
         ];
     }
+
+    
+    
 }

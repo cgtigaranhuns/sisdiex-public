@@ -5,7 +5,8 @@
     <title>Novo Email</title>
 </head>
 <body>
-    <h1>Olá, {{$nome}}</h1>
+    <h1>Olá, {{$inscricaoNome}}</h1>
+    <h1>Inscrição para: {{acaoTitulo}}</h1>
     
     <p>Este é um novo email.</p>
     <p>Atenciosamente,</p>

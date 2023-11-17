@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Inscricao;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,27 +15,20 @@ class NovaInscricao extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * The order instance.
-     *
-     * @var User
-     */
-    protected $user;
-
-    public function __construct(User $user)
-    {
-        $this->user = $user;
-       
-    }
+   
+    
+    public function __construct(
+        protected Inscricao $inscricao,
+    ) {}
 
     
     /**
      * Get the message envelope.
      */
-    public function envelope(): Envelope
+ /*   public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Nova Inscrção '.$this->user->name,
+            subject: 'Nova Inscrção '.$this->inscricao->n,
         );
     }
 
@@ -45,7 +39,10 @@ class NovaInscricao extends Mailable
     {
         return new Content(
             view: 'email.inscricao',
-            with: ['nome' => $this->user->name],
+            with: [
+                'inscricaoNome' => $this->inscricao->user->nome,
+                'acaoTitulo' => $this->inscricao->acao->titulo,
+            ],
         );
     }
 

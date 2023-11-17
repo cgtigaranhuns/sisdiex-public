@@ -61,7 +61,7 @@ class InscricaoResource extends Resource
     {
         return $form
             ->schema([
-                Card::make()
+                Section::make()
                     ->schema([
                         Wizard::make([
                             Wizard\Step::make('Identificação')
@@ -284,6 +284,7 @@ class InscricaoResource extends Resource
                                                         }
                                                     }
                                                 })
+                                                ->required(true)
                                                 ->label('CPF'),
                                             Forms\Components\TextInput::make('telefone')
                                                 ->required(true)
@@ -353,6 +354,8 @@ class InscricaoResource extends Resource
 
                                                 ]),
                                             Forms\Components\TextInput::make('naturalidade')
+                                                ->placeholder('Cidade/Estado onde nasceu')
+                                                ->label('Naturalidade - (Cidade/Estado)')
                                                 ->required(true)
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
@@ -538,7 +541,9 @@ class InscricaoResource extends Resource
                         } else {
                             return false;
                         }
-                    }), 
+                    }),
+                    
+                         
                 Tables\Actions\Action::make('Imprimir_inscricao')
                     ->label('Imprimir Comprovante')
                     ->url(fn (Inscricao $record): string => route('imprimirInscricao', $record))
@@ -557,7 +562,8 @@ class InscricaoResource extends Resource
 
             ])
             ->bulkActions([])
-            ->headerActions([])
+            ->headerActions([
+                           ])
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make()
 
