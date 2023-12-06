@@ -34,11 +34,22 @@ class CreateInscricao extends CreateRecord
         return $this->getResource()::getUrl('index');
     }
 
-    protected function beforeCreate(): void
+    protected function afterCreate(): void
         {
+            //TIPO DE INSCRITO
+       //   dd($this->record);
+        if($this->record->inscricao_tipo == 1){
+            $nomeInscrito = $this->record->discente->name;
+        }
+        if($this->record->inscricao_tipo == 2){
+            $nomeInscrito = $this->record->user->name;
+        }
+        if($this->record->inscricao_tipo == 3){
+            $nomeInscrito = $this->record->nome;
+        }
                 $acao = Acao::find($this->data['acao_id']);
               //  dd($this->data);
-                Mail::raw('Sua inscrição para o Evento/Ação: '.$acao->titulo.', está em análise.', function($msg) {
+                Mail::raw('Olá '.$nomeInscrito.', sua inscrição para o Evento/Ação: '.$acao->titulo.', está em análise.', function($msg) {
                     $msg->to($this->data['email'])->subject('Inscrição cadastrada'); 
                 }); 
 
