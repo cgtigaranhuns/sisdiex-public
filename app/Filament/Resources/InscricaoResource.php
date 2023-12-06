@@ -476,32 +476,46 @@ class InscricaoResource extends Resource
                     ->label('Inscrição'),
                 Tables\Columns\TextColumn::make('acao.titulo')
                     ->label('Ação/Evento'),
-                Tables\Columns\IconColumn::make('inscricao_status')
+                    Tables\Columns\TextColumn::make('inscricao_status')
+                    ->Label('Status da Inscrição')
+                    ->badge()
                     ->alignCenter()
-                    ->label('Status - Inscrição')
-                    ->icon(fn (string $state): string => match ($state) {
-                        '1' => 'heroicon-m-clock',
-                        '2' => 'heroicon-m-check',
-                        '3' => 'heroicon-m-trash',
-                    })
                     ->color(fn (string $state): string => match ($state) {
                         '1' => 'warning',
                         '2' => 'success',
                         '3' => 'danger',
-                    }),
-                Tables\Columns\IconColumn::make('aprovacao_status')
-                    ->alignCenter()
-                    ->label('Status - Aprovação')
-                    ->icon(fn (string $state): string => match ($state) {
-                        '1' => 'heroicon-m-clock',
-                        '2' => 'heroicon-m-academic-cap',
-                        '3' => 'heroicon-m-academic-cap',
                     })
+                    ->formatStateUsing(function($state){
+                        if($state == 1) {
+                            return 'Em Análise';
+                        }
+                        if($state == 2) {
+                            return 'Aprovada';
+                        }
+                        if($state == 3) {
+                            return 'Recusada';
+                        }
+                    }),  
+                Tables\Columns\TextColumn::make('aprovacao_status')
+                    ->Label('Status da Aprovação')
+                    ->badge()
+                    ->alignCenter()
                     ->color(fn (string $state): string => match ($state) {
                         '1' => 'warning',
                         '2' => 'success',
                         '3' => 'danger',
-                    }),
+                    })
+                    ->formatStateUsing(function($state){
+                        if($state == 1) {
+                            return 'Em Análise';
+                        }
+                        if($state == 2) {
+                            return 'Aprovada';
+                        }
+                        if($state == 3) {
+                            return 'Recusada';
+                        }
+                    }),  
              /*   Tables\Columns\SelectColumn::make('inscricao_tipo')
                     ->label('Tipo de Inscrição')
                     ->disabled()
