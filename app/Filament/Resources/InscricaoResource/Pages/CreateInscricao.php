@@ -50,11 +50,11 @@ class CreateInscricao extends CreateRecord
 
         // DOAÇÃO
         if ($this->record->acao->doacao == 1) {
-            Mail::raw('Olá, ' . $nomeInscrito . ', sua inscrição para o Evento/Ação: ' . $acao->titulo . ', está em análise. ATENÇÃO: Para confirmar sua inscrição, voçê deverá entregar a doação de '.$acao->tipo_doacao.', na DIEX.', function ($msg) {
+            Mail::raw('Olá, ' . $nomeInscrito . ', sua inscrição para o Evento/Ação:' . $acao->titulo . ', está em análise. ATENÇÃO: Para confirmar sua inscrição, voçê deverá entregar a doação de '.$acao->tipo_doacao.' na DIEX.', function ($msg) {
                 $msg->to($this->data['email'])->subject('Inscrição cadastrada');
             });
         } else {
-            Mail::raw('Olá ' . $nomeInscrito . ', sua inscrição para o Evento/Ação: ' . $acao->titulo . ', está em análise.', function ($msg) {
+            Mail::raw('Olá ' . $nomeInscrito . ', sua inscrição para o Evento/Ação:' . $acao->titulo . ', está em análise.', function ($msg) {
                 $msg->to($this->data['email'])->subject('Inscrição cadastrada');
             });
         }
