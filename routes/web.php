@@ -15,9 +15,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::get('/', function () { return redirect('/admin'); })->name('login');
-#Route::get('/', function () {
-#    return view('welcome');
-#});
+/*Route::get('/', function () {
+    return view('welcome');
+});
+*/
 Route::get('pdf/Comprovante/{id}',[ComprovanteInscricao::class, 'print'])->name('imprimirInscricao');
 Route::get('pdf/CertificadoParticipante/{id}',[CertificadoParticipante::class, 'print'])->name('imprimirCertificadoParticipante');
 
