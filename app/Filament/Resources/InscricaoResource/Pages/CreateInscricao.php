@@ -62,7 +62,7 @@ class CreateInscricao extends CreateRecord
         //EMAIL DE RETORNO PARA DIEX
 
         Mail::raw('Inscrição realizada para o Evento/Ação: ' . $acao->titulo . '.', function ($msg) {
-            $msg->to('wellington.cavalcante@garanhuns.ifpe.edu.br')->subject('Inscrição realizada');
+            $msg->to('diex@garanhuns.ifpe.edu.br')->subject('Inscrição realizada');
         });
     }
 }
