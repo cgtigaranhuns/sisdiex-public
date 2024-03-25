@@ -65,12 +65,13 @@ class InscricaoResource extends Resource
                     ->schema([
                         Wizard::make([
                             Wizard\Step::make('Identificação')
-                                ->schema([
+                               ->schema([
                                     Forms\Components\Hidden::make('user_criador')
                                         ->default(auth()->user()->id),
 
                                     Forms\Components\Select::make('acao_id')
                                         ->label('Ação/Evento')
+                                        ->exists()
                                         ->required(true)
                                         ->searchable()
                                         ->disabled(function ($context, $record) {
