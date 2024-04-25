@@ -65,7 +65,7 @@ class InscricaoResource extends Resource
                     ->schema([
                         Wizard::make([
                             Wizard\Step::make('Identificação')
-                               ->schema([
+                                ->schema([
                                     Forms\Components\Hidden::make('user_criador')
                                         ->default(auth()->user()->id),
 
@@ -93,28 +93,30 @@ class InscricaoResource extends Resource
                                             ->toArray())
                                         ->afterStateUpdated(function (Get $get) {
                                             //CONTAR INSCRIÇÕES
-                                            $acao = Acao::find($get('acao_id'));
-                                            $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->count();
+                                            if ($get('acao_id') != null) {
+                                                $acao = Acao::find($get('acao_id'));
+                                                $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->count();
 
-                                            if ($contInscAcao >= $acao->vagas_total) {
-                                                Notification::make()
-                                                    ->title('ATENÇÃO')
-                                                    ->warning()
-                                                    ->color('danger')
-                                                    ->body('Todas as vagas foram encerradas para esta Ação/Evento!')
-                                                    ->persistent()
-                                                    ->send();
-                                            } else {
-                                                //INFORMAR EXIGÊNCIA DE DOAÇÕES
-                                                if ($acao->doacao == '1') {
-
+                                                if ($contInscAcao >= $acao->vagas_total) {
                                                     Notification::make()
                                                         ->title('ATENÇÃO')
                                                         ->warning()
                                                         ->color('danger')
-                                                        ->body('Para confirmar sua inscrição, entregue sua doação na DIEX: ' . $acao->tipo_doacao . '.')
+                                                        ->body('Todas as vagas foram encerradas para esta Ação/Evento!')
                                                         ->persistent()
                                                         ->send();
+                                                } else {
+                                                    //INFORMAR EXIGÊNCIA DE DOAÇÕES
+                                                    if ($acao->doacao == '1') {
+
+                                                        Notification::make()
+                                                            ->title('ATENÇÃO')
+                                                            ->warning()
+                                                            ->color('danger')
+                                                            ->body('Para confirmar sua inscrição, entregue sua doação na DIEX: ' . $acao->tipo_doacao . '.')
+                                                            ->persistent()
+                                                            ->send();
+                                                    }
                                                 }
                                             }
                                         })
@@ -150,41 +152,43 @@ class InscricaoResource extends Resource
 
                                         ->afterStateUpdated(function (Get $get) {
                                             //CONTAR INSCRIÇÕES
-                                            $acao = Acao::find($get('acao_id'));
-                                            $contInsTipo = Inscricao::where('acao_id', $get('acao_id'))->where('inscricao_status', '!=', 3)->where('inscricao_tipo', $get('inscricao_tipo'))->count();
+                                            if ($get('acao_id') != null) {
+                                                $acao = Acao::find($get('acao_id'));
+                                                $contInsTipo = Inscricao::where('acao_id', $get('acao_id'))->where('inscricao_status', '!=', 3)->where('inscricao_tipo', $get('inscricao_tipo'))->count();
 
-                                            if ($acao->cota == 1) {
-                                                if ($get('inscricao_tipo') == 1) {
-                                                    if ($contInsTipo >= ($acao->cota_discente))
-                                                        Notification::make()
-                                                            ->title('ATENÇÃO')
-                                                            ->warning()
-                                                            ->color('danger')
-                                                            ->body('As vagas foram encerradas para os dicentes do Campus Garanhuns!')
-                                                            ->persistent()
-                                                            ->send();
-                                                }
-
-                                                if ($get('inscricao_tipo') == 2) {
-                                                    if ($contInsTipo >= $acao->cota_servidor) {
-                                                        Notification::make()
-                                                            ->title('ATENÇÃO')
-                                                            ->warning()
-                                                            ->color('danger')
-                                                            ->body('As vagas foram encerradas para os servidores do Campus Garanhuns!')
-                                                            ->persistent()
-                                                            ->send();
+                                                if ($acao->cota == 1) {
+                                                    if ($get('inscricao_tipo') == 1) {
+                                                        if ($contInsTipo >= ($acao->cota_discente))
+                                                            Notification::make()
+                                                                ->title('ATENÇÃO')
+                                                                ->warning()
+                                                                ->color('danger')
+                                                                ->body('As vagas foram encerradas para os dicentes do Campus Garanhuns!')
+                                                                ->persistent()
+                                                                ->send();
                                                     }
-                                                }
-                                                if ($get('inscricao_tipo') == 3) {
-                                                    if ($contInsTipo >= $acao->cota_externo) {
-                                                        Notification::make()
-                                                            ->title('ATENÇÃO')
-                                                            ->warning()
-                                                            ->color('danger')
-                                                            ->body('As vagas foram encerradas para os participantes externos!')
-                                                            ->persistent()
-                                                            ->send();
+
+                                                    if ($get('inscricao_tipo') == 2) {
+                                                        if ($contInsTipo >= $acao->cota_servidor) {
+                                                            Notification::make()
+                                                                ->title('ATENÇÃO')
+                                                                ->warning()
+                                                                ->color('danger')
+                                                                ->body('As vagas foram encerradas para os servidores do Campus Garanhuns!')
+                                                                ->persistent()
+                                                                ->send();
+                                                        }
+                                                    }
+                                                    if ($get('inscricao_tipo') == 3) {
+                                                        if ($contInsTipo >= $acao->cota_externo) {
+                                                            Notification::make()
+                                                                ->title('ATENÇÃO')
+                                                                ->warning()
+                                                                ->color('danger')
+                                                                ->body('As vagas foram encerradas para os participantes externos!')
+                                                                ->persistent()
+                                                                ->send();
+                                                        }
                                                     }
                                                 }
                                             }
@@ -197,22 +201,24 @@ class InscricaoResource extends Resource
                                                 $acao = Acao::find($get('acao_id'));
                                                 $contInsTipo = Inscricao::where('acao_id', $get('acao_id'))->where('inscricao_status', '!=', 3)->where('inscricao_tipo', $get('inscricao_tipo'))->count();
                                                 // SE TIVER COTAS
-                                                if ($acao->cota == 1) {
-                                                   if ($get('inscricao_tipo') == 1) {
-                                                        if ($contInsTipo >= ($acao->cota_discente)) {
-                                                            $fail("As vagas foram encerradas para os dicentes do Campus Garanhuns");
+                                                if ($get('acao_id') != null) {
+                                                    if ($acao->cota == 1) {
+                                                        if ($get('inscricao_tipo') == 1) {
+                                                            if ($contInsTipo >= ($acao->cota_discente)) {
+                                                                $fail("As vagas foram encerradas para os dicentes do Campus Garanhuns");
+                                                            }
                                                         }
-                                                    }
 
-                                                    if ($get('inscricao_tipo') == 2) {
-                                                        if ($contInsTipo >= ($acao->cota_servidor)) {
-                                                            $fail("As vagas foram encerradas para os servidores do Campus Garanhuns");
+                                                        if ($get('inscricao_tipo') == 2) {
+                                                            if ($contInsTipo >= ($acao->cota_servidor)) {
+                                                                $fail("As vagas foram encerradas para os servidores do Campus Garanhuns");
+                                                            }
                                                         }
-                                                    }
 
-                                                    if ($get('inscricao_tipo') == 3) {
-                                                        if ($contInsTipo >= ($acao->cota_externo)) {
-                                                            $fail("As vagas foram encerradas para os participantes externos");
+                                                        if ($get('inscricao_tipo') == 3) {
+                                                            if ($contInsTipo >= ($acao->cota_externo)) {
+                                                                $fail("As vagas foram encerradas para os participantes externos");
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -239,7 +245,7 @@ class InscricaoResource extends Resource
                                                 ->searchable()
                                                 ->getSearchResultsUsing(fn (string $search): array => User::where('username', 'like', "%{$search}%")->limit(50)->pluck('name', 'id')->toArray())
                                                 ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
-                                               // ->options(User::all()->pluck('name', 'id')->toArray())
+                                                // ->options(User::all()->pluck('name', 'id')->toArray())
                                                 ->hidden(fn (Get $get) => $get('inscricao_tipo') == '1'  ||  $get('inscricao_tipo') == '3' ?? true),
 
                                             Forms\Components\Select::make('discente_id')
@@ -477,7 +483,7 @@ class InscricaoResource extends Resource
                     ->label('Inscrição'),
                 Tables\Columns\TextColumn::make('acao.titulo')
                     ->label('Ação/Evento'),
-                    Tables\Columns\TextColumn::make('inscricao_status')
+                Tables\Columns\TextColumn::make('inscricao_status')
                     ->Label('Status da Inscrição')
                     ->badge()
                     ->alignCenter()
@@ -486,17 +492,17 @@ class InscricaoResource extends Resource
                         '2' => 'success',
                         '3' => 'danger',
                     })
-                    ->formatStateUsing(function($state){
-                        if($state == 1) {
+                    ->formatStateUsing(function ($state) {
+                        if ($state == 1) {
                             return 'Em Análise';
                         }
-                        if($state == 2) {
+                        if ($state == 2) {
                             return 'Aprovada';
                         }
-                        if($state == 3) {
+                        if ($state == 3) {
                             return 'Recusada';
                         }
-                    }),  
+                    }),
                 Tables\Columns\TextColumn::make('aprovacao_status')
                     ->Label('Status da Aprovação')
                     ->badge()
@@ -506,18 +512,18 @@ class InscricaoResource extends Resource
                         '2' => 'success',
                         '3' => 'danger',
                     })
-                    ->formatStateUsing(function($state){
-                        if($state == 1) {
+                    ->formatStateUsing(function ($state) {
+                        if ($state == 1) {
                             return 'Em Análise';
                         }
-                        if($state == 2) {
+                        if ($state == 2) {
                             return 'Aprovada';
                         }
-                        if($state == 3) {
+                        if ($state == 3) {
                             return 'Recusada';
                         }
-                    }),  
-             /*   Tables\Columns\SelectColumn::make('inscricao_tipo')
+                    }),
+                /*   Tables\Columns\SelectColumn::make('inscricao_tipo')
                     ->label('Tipo de Inscrição')
                     ->disabled()
                     ->options([
@@ -557,8 +563,8 @@ class InscricaoResource extends Resource
                             return false;
                         }
                     }),
-                    
-                         
+
+
                 Tables\Actions\Action::make('Imprimir_inscricao')
                     ->label('Imprimir Comprovante')
                     ->url(fn (Inscricao $record): string => route('imprimirInscricao', $record))
@@ -577,8 +583,7 @@ class InscricaoResource extends Resource
 
             ])
             ->bulkActions([])
-            ->headerActions([
-                           ])
+            ->headerActions([])
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make()
 
