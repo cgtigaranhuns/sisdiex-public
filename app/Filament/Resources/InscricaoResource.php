@@ -71,7 +71,7 @@ class InscricaoResource extends Resource
 
                                     Forms\Components\Select::make('acao_id')
                                         ->label('Ação/Evento')
-                                        ->exists()
+                                       // ->exists()
                                         ->required(true)
                                         ->searchable()
                                         ->disabled(function ($context, $record) {
@@ -93,6 +93,7 @@ class InscricaoResource extends Resource
                                             ->toArray())
                                         ->afterStateUpdated(function (Get $get) {
                                             //CONTAR INSCRIÇÕES
+                                          //  dd($get('acao_id'));
                                             if ($get('acao_id') != null) {
                                                 $acao = Acao::find($get('acao_id'));
                                                 $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->count();
@@ -129,7 +130,7 @@ class InscricaoResource extends Resource
                                                     $fail('Todas as vagas foram encerradas para esta Ação/Evento.');
                                                 }
                                             },
-                                        ]),
+                                        ]), 
 
                                     Select::make('inscricao_tipo')
                                         ->label('Tipo de Inscrição')
@@ -143,7 +144,7 @@ class InscricaoResource extends Resource
                                                 }
                                             }
                                         })
-                                        ->reactive()
+                                        ->live()
                                         ->options([
                                             '1' => 'Discente - IFPE - Campus Garanhuns',
                                             '2' => 'Servidor - IFPE - Campus Garanhuns',
@@ -292,6 +293,14 @@ class InscricaoResource extends Resource
                                                     }
                                                 })
                                                 ->required(true)
+                                                ->rules([
+                                                    fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                                                            
+                                                        if (Inscricao::where('acao_id', $get('acao_id'))->where('cpf', $value)->count() != 0) {
+                                                            $fail('CPF já cadastrado nesta Ação/Evento! Consulte suas inscrições realizadas.');
+                                                        } 
+                                                    },
+                                                ])
                                                 ->label('CPF'),
                                             Forms\Components\TextInput::make('telefone')
                                                 ->required(true)
