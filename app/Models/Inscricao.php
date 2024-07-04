@@ -34,6 +34,9 @@ class Inscricao extends Model
         'responsaval_cpf',
         'responsavel_grau',
         'user_criador',
+        'comprovante',
+        'exige_anexo',
+        'idade',
     ];
 
     public function User() {

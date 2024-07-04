@@ -34,17 +34,25 @@ use Illuminate\Support\Facades\DB;
 use App\Mail\NovaInscricao;
 use Illuminate\Support\Facades\Mail;
 use Filament\Actions\CreateAction;
-
-
+use Filament\Forms\Components\Component;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Livewire;
+use Filament\Forms\FormsComponent;
+use Illuminate\Mail\Mailables\Content;
+use Nette\Schema\Context;
+use Symfony\Contracts\Service\Attribute\Required;
+use Filament\Forms\Components\FileUpload;
 
 class InscricaoResource extends Resource
 {
+
 
     public static function getEloquentQuery(): Builder
     {
         // dd(auth()->user()->email);
         return parent::getEloquentQuery()->where('user_criador', '=', auth()->user()->id);
     }
+
 
 
     protected static ?string $model = Inscricao::class;
@@ -65,13 +73,14 @@ class InscricaoResource extends Resource
                     ->schema([
                         Wizard::make([
                             Wizard\Step::make('Identificação')
+
                                 ->schema([
                                     Forms\Components\Hidden::make('user_criador')
                                         ->default(auth()->user()->id),
 
                                     Forms\Components\Select::make('acao_id')
                                         ->label('Ação/Evento')
-                                       // ->exists()
+                                        ->exists()
                                         ->required(true)
                                         ->searchable()
                                         ->disabled(function ($context, $record) {
@@ -83,7 +92,6 @@ class InscricaoResource extends Resource
                                                 }
                                             }
                                         })
-                                        ->reactive()
                                         ->live()
                                         ->options(Acao::query()
                                             ->where('status', '=', '2')
@@ -93,44 +101,43 @@ class InscricaoResource extends Resource
                                             ->toArray())
                                         ->afterStateUpdated(function (Get $get) {
                                             //CONTAR INSCRIÇÕES
-                                          //  dd($get('acao_id'));
-                                            if ($get('acao_id') != null) {
-                                                $acao = Acao::find($get('acao_id'));
-                                                $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->count();
+                                            $acao = Acao::find($get('acao_id'));
+                                            $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->count();
 
-                                                if ($contInscAcao >= $acao->vagas_total) {
+                                            //  dd($acao->status_comprovante);
+
+                                            if ($contInscAcao >= $acao->vagas_total) {
+                                                Notification::make()
+                                                    ->title('ATENÇÃO')
+                                                    ->warning()
+                                                    ->color('danger')
+                                                    ->body('Todas as vagas foram encerradas para esta Ação/Evento!')
+                                                    ->persistent()
+                                                    ->send();
+                                            } else {
+                                                //INFORMAR EXIGÊNCIA DE DOAÇÕES
+                                                if ($acao->doacao == '1') {
+
                                                     Notification::make()
                                                         ->title('ATENÇÃO')
                                                         ->warning()
                                                         ->color('danger')
-                                                        ->body('Todas as vagas foram encerradas para esta Ação/Evento!')
+                                                        ->body('Para confirmar sua inscrição, entregue sua doação na DIEX: ' . $acao->tipo_doacao . '.')
                                                         ->persistent()
                                                         ->send();
-                                                } else {
-                                                    //INFORMAR EXIGÊNCIA DE DOAÇÕES
-                                                    if ($acao->doacao == '1') {
-
-                                                        Notification::make()
-                                                            ->title('ATENÇÃO')
-                                                            ->warning()
-                                                            ->color('danger')
-                                                            ->body('Para confirmar sua inscrição, entregue sua doação na DIEX: ' . $acao->tipo_doacao . '.')
-                                                            ->persistent()
-                                                            ->send();
-                                                    }
                                                 }
                                             }
                                         })
                                         ->rules([
-                                            fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                                            fn (Get $get, $context): Closure => function (string $attribute, $value, Closure $fail) use ($get, $context) {
                                                 $acao = Acao::find($get('acao_id'));
                                                 $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->count();
-
-                                                if ($contInscAcao >= $acao->vagas_total) {
+                                                
+                                                if ($contInscAcao >= $acao->vagas_total and $context == 'create') {
                                                     $fail('Todas as vagas foram encerradas para esta Ação/Evento.');
                                                 }
                                             },
-                                        ]), 
+                                        ]),
 
                                     Select::make('inscricao_tipo')
                                         ->label('Tipo de Inscrição')
@@ -144,7 +151,7 @@ class InscricaoResource extends Resource
                                                 }
                                             }
                                         })
-                                        ->live()
+                                        ->reactive()
                                         ->options([
                                             '1' => 'Discente - IFPE - Campus Garanhuns',
                                             '2' => 'Servidor - IFPE - Campus Garanhuns',
@@ -226,6 +233,7 @@ class InscricaoResource extends Resource
                                             }
                                         ])
                                 ]),
+
                             Wizard\Step::make('Dados Básicos')
                                 ->schema([
                                     Grid::make()
@@ -294,12 +302,16 @@ class InscricaoResource extends Resource
                                                 })
                                                 ->required(true)
                                                 ->rules([
-                                                    fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
-                                                            
-                                                        if (Inscricao::where('acao_id', $get('acao_id'))->where('cpf', $value)->count() != 0) {
-                                                            $fail('CPF já cadastrado nesta Ação/Evento! Consulte suas inscrições realizadas.');
-                                                        } 
-                                                    },
+                                                    function ($context, Get $get) {
+                                                        return function (string $attribute, $value, \Closure $fail) use ($context, $get) {
+
+                                                            if ($context === 'create') {
+                                                                if (Inscricao::where('acao_id', $get('acao_id'))->where('cpf', $value)->count() != 0) {
+                                                                    $fail('CPF já cadastrado nesta Ação/Evento! Consulte suas inscrições realizadas.');
+                                                                }
+                                                            }
+                                                        };
+                                                    }
                                                 ])
                                                 ->label('CPF'),
                                             Forms\Components\TextInput::make('telefone')
@@ -387,7 +399,7 @@ class InscricaoResource extends Resource
                                                 ->label('Data de Nascimento')
                                                 ->date()
                                                 ->disabled(function ($context, $record) {
-                                                    if ($context == 'edit') {
+                                                    if ($context === 'edit') {
                                                         if ($record->inscricao_status != '1') {
                                                             return true;
                                                         } else {
@@ -395,27 +407,24 @@ class InscricaoResource extends Resource
                                                         }
                                                     }
                                                 })
-                                                ->reactive()
                                                 ->required(true)
-                                                ->afterStateUpdated(function ($set, $state) {
-
+                                                ->afterStateUpdated(function ($set, $state, Get $get) {
                                                     $set('idade', Carbon::parse($state)->age);
+                                                    $statusComprovante = Acao::find($get('acao_id'));
+                                                    if ($statusComprovante->status_comprovante == 1) {
+                                                        Notification::make()
+                                                            ->title('ATENÇÃO: ANEXAR COMPROVANTE')
+                                                            ->persistent()
+                                                            ->body('É necessário anexar o comprovante: ' . $statusComprovante->descricao_comprovante)
+                                                            ->success()
+                                                            ->send();
 
-                                                    //  return Carbon::parse($state)->age;
+                                                        $set('exige_anexo', $statusComprovante->status_comprovante);
+                                                    }
                                                 })
                                                 ->live(onBlur: true),
-                                            Forms\Components\Hidden::make('idade')
-                                                ->default(18)
-                                                ->disabled(function ($context, $record) {
-                                                    if ($context == 'edit') {
-                                                        if ($record->inscricao_status != '1') {
-                                                            return true;
-                                                        } else {
-                                                            return false;
-                                                        }
-                                                    }
-                                                })
-                                                ->live(),
+                                            Forms\Components\Hidden::make('idade'),
+                                            //    ->live(),
                                             Forms\Components\TextInput::make('responsavel_nome')
                                                 ->label('Nome do responsável')
                                                 ->required(true)
@@ -445,6 +454,7 @@ class InscricaoResource extends Resource
                                                 ->hidden(fn (Get $get) => $get('idade') > '17' ?? true),
                                             Radio::make('cor_raca')
                                                 ->label('Cor/Raça:')
+                                                ->required()
                                                 ->disabled(function ($context, $record) {
                                                     if ($context == 'edit') {
                                                         if ($record->inscricao_status != '1') {
@@ -463,6 +473,12 @@ class InscricaoResource extends Resource
                                                     '5' => 'Indígena',
                                                     '6' => 'Não Declarar',
                                                 ])->columnSpanFull(),
+                                            Forms\Components\Hidden::make('exige_anexo'),
+                                            FileUpload::make('comprovante')
+                                                ->hidden(fn (Get $get) => $get('exige_anexo') != '1')
+                                                ->required(fn (Get $get) => $get('exige_anexo') == '1')
+                                                ->downloadable()
+                                                ->label('Anexar Comprovante'),
                                             Forms\Components\Hidden::make('inscricao_status')
                                                 ->default(1),
                                             Forms\Components\Hidden::make('aprovacao_status')
@@ -470,6 +486,7 @@ class InscricaoResource extends Resource
                                         ]),
 
                                 ]),
+
                         ])
                         /*->submitAction(new HtmlString(Blade::render(<<<BLADE
                         <x-filament::button
