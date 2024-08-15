@@ -80,7 +80,7 @@ class InscricaoResource extends Resource
 
                                     Forms\Components\Select::make('acao_id')
                                         ->label('Ação/Evento')
-                                        ->exists()
+                                       // ->exists()
                                         ->required(true)
                                         ->searchable()
                                         ->disabled(function ($context, $record) {

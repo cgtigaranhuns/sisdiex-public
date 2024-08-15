@@ -137,7 +137,7 @@
                        {{ $cp->ementa }}
                     </td>
                     <td>
-                        {{ $cp->carga_horaria }}
+                    <div style="margin-left: 30px;">{{ $cp->carga_horaria }}</div>
                     </td>
                 </tr>
             @endforeach
