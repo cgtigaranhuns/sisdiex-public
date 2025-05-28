@@ -35,11 +35,11 @@ class Acao extends BaseWidget
                 TextColumn::make('data_inicio')
                     ->label('Data Início')
                     ->alignCenter()
-                    ->date('d/m/y'),
+                    ->date('d/m/Y'),
                 TextColumn::make('data_encerramento')
                     ->label('Data Encerramento')
                     ->alignCenter()
-                    ->date('d/m/y'),
+                    ->date('d/m/Y'),
                 // TextColumn::make('hora_inicio')
                 //     ->label('Hora Início')
                 //     ->date('H:i'),
@@ -60,7 +60,7 @@ class Acao extends BaseWidget
                     // // ->hasSummary() // Removido porque o método não existe
             ])
             ->actions([
-                Tables\Actions\Action::make('view')
+                Tables\Actions\Action::make('detalhes')
                     ->label('Ver detalhes')
                     ->icon('heroicon-m-eye')
                     ->modalHeading('Detalhes da Ação')
@@ -70,9 +70,16 @@ class Acao extends BaseWidget
                         ]);
                     })
                     ->modalCancelActionLabel('Voltar') // Altera o texto do botão "Cancelar"
-                    ->modalSubmitAction(false) // Tenta esconder o botão de submissão
-                    
-                   // ->requiresConfirmation()
+                    ->modalSubmitAction(false),// Tenta esconder o botão de submissão
+
+
+                   Tables\Actions\Action::make('inscrever')
+                    ->label('Inscrever-se')
+                    ->color('danger')
+                    ->icon('heroicon-m-eye')
+                    ->url(fn (ModelsAcao $record): string => 
+                        route('filament.admin.resources.inscricaos.create')
+                    )                   
                   
             ]);
             }
