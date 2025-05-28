@@ -76,7 +76,7 @@ class Acao extends BaseWidget
                    Tables\Actions\Action::make('inscrever')
                     ->label('Inscrever-se')
                     ->color('danger')
-                    ->icon('heroicon-m-eye')
+                    ->icon('heroicon-m-pencil-square')
                     ->url(fn (ModelsAcao $record): string => 
                         route('filament.admin.resources.inscricaos.create')
                     )                   
