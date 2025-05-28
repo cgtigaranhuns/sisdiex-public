@@ -21,5 +21,7 @@ Route::get('/', function () { return redirect('/admin'); })->name('login');
 */
 Route::get('pdf/Comprovante/{id}',[ComprovanteInscricao::class, 'print'])->name('imprimirInscricao');
 Route::get('pdf/CertificadoParticipante/{id}',[CertificadoParticipante::class, 'print'])->name('imprimirCertificadoParticipante');
+Route::get('modal/exibir-dados-acao/{id}', [\App\Http\Controllers\ExibirDadosAcao::class, 'show'])->name('modal.exibir-dados-acao');
+
 
 
