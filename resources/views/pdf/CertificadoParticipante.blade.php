@@ -80,7 +80,7 @@
     </div>
    
 
-    <table style="margin-top: 170px; width: 100%;  font-family: courier,arial,helvetica; ">
+    <table style="margin-top: 165px; width: 100%;  font-family: courier,arial,helvetica; ">
         <tr style="padding-block: 0px">
             <td style="text-align: center; " >
               <img class="assinaturas"  src="{{ asset('img/assinatura_diex.png') }}" width="250px" height="40px">
