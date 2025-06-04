@@ -42,6 +42,7 @@ use Illuminate\Mail\Mailables\Content;
 use Nette\Schema\Context;
 use Symfony\Contracts\Service\Attribute\Required;
 use Filament\Forms\Components\FileUpload;
+use Illuminate\Database\Eloquent\Model;
 
 class InscricaoResource extends Resource
 {
@@ -80,7 +81,7 @@ class InscricaoResource extends Resource
 
                                     Forms\Components\Select::make('acao_id')
                                         ->label('Ação/Evento')
-                                       // ->exists()
+                                        // ->exists()
                                         ->required(true)
                                         ->searchable()
                                         ->disabled(function ($context, $record) {
@@ -102,7 +103,7 @@ class InscricaoResource extends Resource
                                         ->afterStateUpdated(function (Get $get) {
                                             //CONTAR INSCRIÇÕES
                                             $acao = Acao::find($get('acao_id'));
-                                            $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->count();
+                                            $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->where('inscricao_status', '!=', 3)->count();
 
                                             //  dd($acao->status_comprovante);
 
@@ -129,10 +130,10 @@ class InscricaoResource extends Resource
                                             }
                                         })
                                         ->rules([
-                                            fn (Get $get, $context): Closure => function (string $attribute, $value, Closure $fail) use ($get, $context) {
+                                            fn(Get $get, $context): Closure => function (string $attribute, $value, Closure $fail) use ($get, $context) {
                                                 $acao = Acao::find($get('acao_id'));
-                                                $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->count();
-                                                
+                                                $contInscAcao = Inscricao::where('acao_id', $get('acao_id'))->where('inscricao_status', '!=', 3)->count();
+
                                                 if ($contInscAcao >= $acao->vagas_total and $context == 'create') {
                                                     $fail('Todas as vagas foram encerradas para esta Ação/Evento.');
                                                 }
@@ -204,7 +205,7 @@ class InscricaoResource extends Resource
 
                                         ->live()
                                         ->rules([
-                                            fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                                            fn(Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
 
                                                 $acao = Acao::find($get('acao_id'));
                                                 $contInsTipo = Inscricao::where('acao_id', $get('acao_id'))->where('inscricao_status', '!=', 3)->where('inscricao_tipo', $get('inscricao_tipo'))->count();
@@ -252,10 +253,10 @@ class InscricaoResource extends Resource
                                                     }
                                                 })
                                                 ->searchable()
-                                                ->getSearchResultsUsing(fn (string $search): array => User::where('username', 'like', "%{$search}%")->limit(50)->pluck('name', 'id')->toArray())
-                                                ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                                                ->getSearchResultsUsing(fn(string $search): array => User::where('username', 'like', "%{$search}%")->limit(50)->pluck('name', 'id')->toArray())
+                                                ->getOptionLabelUsing(fn($value): ?string => User::find($value)?->name)
                                                 // ->options(User::all()->pluck('name', 'id')->toArray())
-                                                ->hidden(fn (Get $get) => $get('inscricao_tipo') == '1'  ||  $get('inscricao_tipo') == '3' ?? true),
+                                                ->hidden(fn(Get $get) => $get('inscricao_tipo') == '1'  ||  $get('inscricao_tipo') == '3' ?? true),
 
                                             Forms\Components\Select::make('discente_id')
                                                 ->label('Discente - IFPE - Campus Garanhuns')
@@ -271,10 +272,10 @@ class InscricaoResource extends Resource
                                                     }
                                                 })
                                                 ->searchable()
-                                                ->getSearchResultsUsing(fn (string $search): array => Discente::where('username', 'like', "%{$search}%")->limit(50)->pluck('name', 'id')->toArray())
-                                                ->getOptionLabelUsing(fn ($value): ?string => Discente::find($value)?->name)
-                                                //  ->options(Discente::all()->pluck('username', 'id')->toArray())
-                                                ->hidden(fn (Get $get) => $get('inscricao_tipo') == '2'  ||  $get('inscricao_tipo') == '3' ?? true),
+                                                ->relationship('Discente', 'username')
+                                                ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->username} - {$record->name}")
+                                                ->searchable(['username', 'name'])
+                                                ->hidden(fn(Get $get) => $get('inscricao_tipo') == '2'  ||  $get('inscricao_tipo') == '3' ?? true),
                                             Forms\Components\TextInput::make('nome')
                                                 ->label('Nome')
                                                 ->required(true)
@@ -288,7 +289,7 @@ class InscricaoResource extends Resource
                                                     }
                                                 })
                                                 ->maxLength(255)
-                                                ->hidden(fn (Get $get) => $get('inscricao_tipo') == '1'  ||  $get('inscricao_tipo') == '2' ?? true),
+                                                ->hidden(fn(Get $get) => $get('inscricao_tipo') == '1'  ||  $get('inscricao_tipo') == '2' ?? true),
                                             Forms\Components\TextInput::make('cpf')
                                                 ->mask('999.999.999-99')
                                                 ->disabled(function ($context, $record) {
@@ -439,7 +440,7 @@ class InscricaoResource extends Resource
                                                 })
                                                 ->maxLength(255)
                                                 ->required()
-                                                ->hidden(fn (Get $get) => $get('idade') > '17' ?? true),
+                                                ->hidden(fn(Get $get) => $get('idade') > '17' ?? true),
                                             Forms\Components\TextInput::make('responsavel_grau')
                                                 ->required(true)
                                                 ->disabled(function ($context, $record) {
@@ -451,7 +452,7 @@ class InscricaoResource extends Resource
                                                         }
                                                     }
                                                 })
-                                                ->hidden(fn (Get $get) => $get('idade') > '17' ?? true),
+                                                ->hidden(fn(Get $get) => $get('idade') > '17' ?? true),
                                             Radio::make('cor_raca')
                                                 ->label('Cor/Raça:')
                                                 ->required()
@@ -475,8 +476,8 @@ class InscricaoResource extends Resource
                                                 ])->columnSpanFull(),
                                             Forms\Components\Hidden::make('exige_anexo'),
                                             FileUpload::make('comprovante')
-                                                ->hidden(fn (Get $get) => $get('exige_anexo') != '1')
-                                                ->required(fn (Get $get) => $get('exige_anexo') == '1')
+                                                ->hidden(fn(Get $get) => $get('exige_anexo') != '1')
+                                                ->required(fn(Get $get) => $get('exige_anexo') == '1')
                                                 ->downloadable()
                                                 ->label('Anexar Comprovante'),
                                             Forms\Components\Hidden::make('inscricao_status')
@@ -513,7 +514,7 @@ class InscricaoResource extends Resource
                     ->Label('Status da Inscrição')
                     ->badge()
                     ->alignCenter()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         '1' => 'warning',
                         '2' => 'success',
                         '3' => 'danger',
@@ -533,7 +534,7 @@ class InscricaoResource extends Resource
                     ->Label('Status da Aprovação')
                     ->badge()
                     ->alignCenter()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         '1' => 'warning',
                         '2' => 'success',
                         '3' => 'danger',
@@ -593,7 +594,7 @@ class InscricaoResource extends Resource
 
                 Tables\Actions\Action::make('Imprimir_inscricao')
                     ->label('Imprimir Comprovante')
-                    ->url(fn (Inscricao $record): string => route('imprimirInscricao', $record))
+                    ->url(fn(Inscricao $record): string => route('imprimirInscricao', $record))
                     ->openUrlInNewTab(),
                 Tables\Actions\Action::make('Imprimir_certificdao')
                     ->label('Imprimir Certificado')
@@ -604,7 +605,7 @@ class InscricaoResource extends Resource
                             return true;
                         }
                     })
-                    ->url(fn (Inscricao $record): string => route('imprimirCertificadoParticipante', $record))
+                    ->url(fn(Inscricao $record): string => route('imprimirCertificadoParticipante', $record))
                     ->openUrlInNewTab(),
 
             ])
