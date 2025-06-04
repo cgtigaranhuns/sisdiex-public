@@ -30,7 +30,10 @@ class Acao extends BaseWidget
                     ->whereDate('data_fim_inscricoes', '>=', Carbon::today())
             )
             ->columns([
-                TextColumn::make('titulo'),
+                TextColumn::make('titulo')
+                    ->wrap()
+                    ->label('Título'),
+                    
                 // TextColumn::make('local'),
                 TextColumn::make('data_inicio')
                     ->label('Data Início')
